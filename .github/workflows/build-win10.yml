@@ -5,9 +5,8 @@
 # white-to-transparent features), builds the server, and packages everything
 # into a portable zip with adb.
 #
-# Trigger it manually from the Actions tab (optionally overriding the version
-# name used in the zip filename), or automatically on pushes/PRs to the
-# feature branch.
+# It only runs when triggered manually from the Actions tab
+# (workflow_dispatch).
 
 name: Build Windows 10 binary
 
@@ -18,12 +17,6 @@ on:
         description: 'Version name used in the zip filename (default: git describe)'
         required: false
         default: ''
-  push:
-    branches:
-      - 'arena/01a0ba49-scrcpy'
-  pull_request:
-    branches:
-      - 'arena/01a0ba49-scrcpy'
 
 env:
   # $VERSION is used by release scripts; when empty, they fall back to
