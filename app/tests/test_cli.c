@@ -121,6 +121,51 @@ static void test_options2(void) {
     assert(opts->record_format == SC_RECORD_FORMAT_MP4);
 }
 
+static void test_options3(void) {
+    struct scrcpy_cli_args args = {
+        .opts = scrcpy_options_default,
+        .help = false,
+        .version = false,
+    };
+
+    char *argv[] = {
+        "scrcpy",
+        "--grayscale",
+        "--transparent-white",
+        "--luminance-threshold", "0.5",
+        "--luminance-edge", "0.1",
+    };
+
+    bool ok = scrcpy_parse_args(&args, ARRAY_LEN(argv), argv);
+    assert(ok);
+
+    const struct scrcpy_options *opts = &args.opts;
+    assert(opts->grayscale);
+    assert(opts->transparent_white);
+    assert(opts->luminance_threshold == 0.5f);
+    assert(opts->luminance_edge == 0.1f);
+
+    // an out-of-range luminance threshold must be rejected
+    args.opts = scrcpy_options_default;
+    char *invalid_threshold[] = {
+        "scrcpy",
+        "--transparent-white",
+        "--luminance-threshold", "1.5",
+    };
+    ok = scrcpy_parse_args(&args, ARRAY_LEN(invalid_threshold), invalid_threshold);
+    assert(!ok);
+
+    // an out-of-range luminance edge must be rejected
+    args.opts = scrcpy_options_default;
+    char *invalid_edge[] = {
+        "scrcpy",
+        "--transparent-white",
+        "--luminance-edge", "-0.1",
+    };
+    ok = scrcpy_parse_args(&args, ARRAY_LEN(invalid_edge), invalid_edge);
+    assert(!ok);
+}
+
 static void test_parse_shortcut_mods(void) {
     uint8_t mods;
     bool ok;
@@ -157,6 +202,7 @@ int main(int argc, char *argv[]) {
     test_flag_help();
     test_options();
     test_options2();
+    test_options3();
     test_parse_shortcut_mods();
     return 0;
 }

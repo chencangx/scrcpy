@@ -33,6 +33,7 @@ _scrcpy() {
         --force-adb-forward
         -G
         --gamepad=
+        --grayscale
         -h --help
         --ignore-video-encoder-constraints
         -K
@@ -45,6 +46,8 @@ _scrcpy() {
         --list-cameras
         --list-displays
         --list-encoders
+        --luminance-threshold=
+        --luminance-edge=
         -m --max-size=
         -M
         --max-fps=
@@ -96,6 +99,7 @@ _scrcpy() {
         --tcpip
         --tcpip=
         --time-limit=
+        --transparent-white
         --tunnel-host=
         --tunnel-port=
         --v4l2-buffer=
@@ -225,8 +229,11 @@ _scrcpy() {
         |--new-display \
         |-p|--port \
         |--push-target \
+        |--luminance-threshold \
+        |--luminance-edge \
         |--rotation \
         |--screen-off-timeout \
+        |--tcpip \
         |--tunnel-host \
         |--tunnel-port \
         |--v4l2-buffer \
@@ -234,7 +241,6 @@ _scrcpy() {
         |--video-buffer \
         |--video-codec-options \
         |--video-encoder \
-        |--tcpip \
         |--window-*)
             # Option accepting an argument, but nothing to auto-complete
             return

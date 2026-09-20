@@ -236,6 +236,9 @@ struct sc_port_range {
 
 #define SC_WINDOW_POSITION_UNDEFINED (-0x8000)
 
+#define SC_LUMINANCE_THRESHOLD_DEFAULT 0.85f
+#define SC_LUMINANCE_EDGE_DEFAULT 0.15f
+
 struct scrcpy_options {
     const char *serial;
     const char *crop;
@@ -346,6 +349,10 @@ struct scrcpy_options {
     bool flex_display;
     bool ignore_video_encoder_constraints;
     bool update_terminal_title;
+    bool grayscale;
+    bool transparent_white;
+    float luminance_threshold;
+    float luminance_edge;
 };
 
 extern const struct scrcpy_options scrcpy_options_default;

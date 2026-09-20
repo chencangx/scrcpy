@@ -5,7 +5,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <libavutil/buffer.h>
 #include <libavutil/frame.h>
+#include <libswscale/swscale.h>
 #include <SDL3/SDL.h>
 
 #include "coords.h"
@@ -14,6 +16,12 @@
 enum sc_texture_type {
     SC_TEXTURE_TYPE_FRAME,
     SC_TEXTURE_TYPE_ICON,
+};
+
+// Post-processing effects applied on the video frames before upload
+enum sc_texture_filter {
+    SC_TEXTURE_FILTER_GRAYSCALE = 1 << 0,
+    SC_TEXTURE_FILTER_TRANSPARENT_WHITE = 1 << 1,
 };
 
 struct sc_texture {
@@ -27,10 +35,35 @@ struct sc_texture {
 
     bool mipmaps;
     uint32_t texture_id; // only set if mipmaps is enabled
+
+    uint8_t filter_flags; // OR of enum sc_texture_filter values
+
+    // The final pixels are premultiplied by their alpha, ready for
+    // SDL_BLENDMODE_PREMULTIPLIED
+    bool premultiplied;
+
+    // White (luminance) to transparent parameters
+    float luminance_threshold;
+    float luminance_edge;
+
+    // Frames are converted to BGRA8888 by libswscale
+    struct SwsContext *sws;
+    // BGRA8888 buffer for the current frame
+    AVBufferRef *sws_buf;
 };
 
 bool
-sc_texture_init(struct sc_texture *tex, SDL_Renderer *renderer, bool mipmaps);
+sc_texture_init(struct sc_texture *tex, SDL_Renderer *renderer, bool mipmaps,
+                uint8_t filter_flags, float luminance_threshold,
+                float luminance_edge);
+
+void
+sc_texture_set_luminance_params(struct sc_texture *tex, float threshold,
+                                float edge);
+
+bool
+sc_texture_get_luminance_params(const struct sc_texture *tex, float *threshold,
+                                float *edge);
 
 void
 sc_texture_destroy(struct sc_texture *tex);

@@ -499,6 +499,22 @@ sc_screen_init(struct sc_screen *screen,
     screen->render_fit = params->render_fit;
     screen->flex_display = params->flex_display;
 
+    // Client-side display effects
+    screen->grayscale = params->grayscale;
+    screen->transparent_white = params->transparent_white;
+    screen->luminance_threshold = params->luminance_threshold;
+    screen->luminance_edge = params->luminance_edge;
+
+    // A transparent window cannot be combined with exclusive fullscreen
+    // (the flag is fixed at window creation), so disable transparency when
+    // starting directly in fullscreen mode.
+    screen->window_transparent =
+        params->video && params->transparent_white && !params->fullscreen;
+    if (params->video && params->transparent_white && params->fullscreen) {
+        LOGW("--transparent-white is not supported in fullscreen mode, "
+             "disabled");
+    }
+
     screen->bg.r = (params->background_color >> 16) & 0xFF;
     screen->bg.g = (params->background_color >> 8) & 0xFF;
     screen->bg.b = params->background_color & 0xFF;
@@ -549,6 +565,13 @@ sc_screen_init(struct sc_screen *screen,
     if (params->video) {
         // The window will be shown on first frame
         window_flags |= SDL_WINDOW_RESIZABLE;
+    }
+    if (screen->window_transparent) {
+        // Enable per-pixel alpha blending on the window (for example using
+        // DirectComposition/DWM under Windows). Transparent fullscreen
+        // windows are not supported, so this flag is never combined with
+        // SDL_WINDOW_FULLSCREEN.
+        window_flags |= SDL_WINDOW_TRANSPARENT;
     }
 
     const char *title = params->window_title;
@@ -610,7 +633,17 @@ sc_screen_init(struct sc_screen *screen,
 #endif
 
     bool mipmaps = params->video;
-    ok = sc_texture_init(&screen->tex, screen->renderer, mipmaps);
+    uint8_t filter_flags = 0;
+    if (params->grayscale) {
+        filter_flags |= SC_TEXTURE_FILTER_GRAYSCALE;
+    }
+    if (params->transparent_white) {
+        filter_flags |= SC_TEXTURE_FILTER_TRANSPARENT_WHITE;
+    }
+
+    ok = sc_texture_init(&screen->tex, screen->renderer, mipmaps,
+                         filter_flags, params->luminance_threshold,
+                         params->luminance_edge);
     if (!ok) {
         goto error_destroy_renderer;
     }
@@ -1108,6 +1141,43 @@ sc_screen_resize_to_pixel_perfect(struct sc_screen *screen) {
     sc_sdl_set_window_size(screen->window, content_size);
     LOGD("Resized to pixel-perfect: %ux%u", content_size.width,
                                             content_size.height);
+}
+
+bool
+sc_screen_get_luminance_params(struct sc_screen *screen, float *threshold,
+                               float *edge) {
+    return sc_texture_get_luminance_params(&screen->tex, threshold, edge);
+}
+
+bool
+sc_screen_adjust_luminance(struct sc_screen *screen, bool threshold, float inc) {
+    assert(screen->transparent_white);
+    assert(screen->video);
+
+    float new_threshold;
+    float new_edge;
+    sc_texture_get_luminance_params(&screen->tex, &new_threshold, &new_edge);
+
+    if (threshold) {
+        new_threshold += inc;
+        new_threshold = CLAMP(new_threshold, 0.f, 1.f);
+    } else {
+        new_edge += inc;
+        new_edge = CLAMP(new_edge, 0.f, 0.5f);
+    }
+
+    sc_texture_set_luminance_params(&screen->tex, new_threshold, new_edge);
+
+    // Apply the new parameters immediately on the cached frame
+    if (screen->window_shown && screen->frame && screen->frame->width
+            && screen->frame->height) {
+        bool ok = sc_screen_apply_frame(screen, false);
+        if (!ok) {
+            LOGE("Frame update after luminance adjustment failed");
+        }
+    }
+
+    return true;
 }
 
 static void

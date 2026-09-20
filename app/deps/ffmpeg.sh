@@ -51,7 +51,6 @@ else
         --extra-cflags="-O2 -fPIC"
         --disable-programs
         --disable-doc
-        --disable-swscale
         --disable-avfilter
         --disable-network
         --disable-everything
@@ -59,6 +58,7 @@ else
         --disable-vaapi
         --disable-vdpau
         --enable-swresample
+        --enable-swscale
         --enable-libdav1d
         --enable-decoder=h264
         --enable-decoder=hevc

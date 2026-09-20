@@ -39,6 +39,11 @@ struct sc_screen {
     bool camera;
     bool window_aspect_ratio_lock;
     bool flex_display;
+    bool window_transparent;
+    bool grayscale;
+    bool transparent_white;
+    float luminance_threshold;
+    float luminance_edge;
 
     struct sc_controller *controller;
 
@@ -144,6 +149,11 @@ struct sc_screen_params {
 
     bool fullscreen;
     bool start_fps_counter;
+
+    bool grayscale;
+    bool transparent_white;
+    float luminance_threshold;
+    float luminance_edge;
 };
 
 // initialize screen, create window, renderer and texture (window is hidden)
@@ -204,5 +214,15 @@ sc_screen_handle_disconnection(struct sc_screen *screen);
 struct sc_point
 sc_screen_convert_window_to_frame_coords(struct sc_screen *screen,
                                         int32_t x, int32_t y);
+
+// Read the current luminance threshold and edge feathering parameters
+bool
+sc_screen_get_luminance_params(struct sc_screen *screen, float *threshold,
+                               float *edge);
+
+// Increment (or decrement, with a negative inc) the luminance threshold
+// (threshold=true) or the edge feathering bandwidth (threshold=false)
+bool
+sc_screen_adjust_luminance(struct sc_screen *screen, bool threshold, float inc);
 
 #endif

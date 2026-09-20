@@ -123,6 +123,10 @@ const struct scrcpy_options scrcpy_options_default = {
     .flex_display = false,
     .ignore_video_encoder_constraints = false,
     .update_terminal_title = true,
+    .grayscale = false,
+    .transparent_white = false,
+    .luminance_threshold = SC_LUMINANCE_THRESHOLD_DEFAULT,
+    .luminance_edge = SC_LUMINANCE_EDGE_DEFAULT,
 };
 
 enum sc_orientation

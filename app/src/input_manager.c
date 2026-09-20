@@ -349,6 +349,30 @@ apply_orientation_transform(struct sc_input_manager *im,
     sc_screen_set_orientation(screen, new_orientation);
 }
 
+/*
+ * Adjust the white-to-transparent parameters from a shortcut.
+ * "threshold" controls whether the luminance threshold (true) or the edge
+ * feathering bandwidth (false) is adjusted.
+ */
+static void
+adjust_luminance(struct sc_input_manager *im, bool threshold, float inc) {
+    struct sc_screen *screen = im->screen;
+    if (!screen->transparent_white) {
+        // Nothing to adjust when the effect is disabled
+        return;
+    }
+
+    sc_screen_adjust_luminance(screen, threshold, inc);
+
+    float new_threshold;
+    float new_edge;
+    sc_screen_get_luminance_params(screen, &new_threshold, &new_edge);
+    LOGI("Luminance threshold=%.2f edge=%.2f (grayscale=%s, "
+         "transparent-white=%s)", new_threshold, new_edge,
+         screen->grayscale ? "true" : "false",
+         screen->transparent_white ? "true" : "false");
+}
+
 static void
 sc_input_manager_process_text_input(struct sc_input_manager *im,
                                     const SDL_TextInputEvent *event) {
@@ -523,6 +547,30 @@ sc_input_manager_process_key(struct sc_input_manager *im,
             case SDLK_I:
                 if (video && !shift && !repeat && down) {
                     switch_fps_counter_state(im);
+                }
+                return;
+            case SDLK_LEFTBRACKET:
+                if (video && !shift && !repeat && down) {
+                    // Decrease the white-transparency luminance threshold
+                    adjust_luminance(im, true, -0.05f);
+                }
+                return;
+            case SDLK_RIGHTBRACKET:
+                if (video && !shift && !repeat && down) {
+                    // Increase the white-transparency luminance threshold
+                    adjust_luminance(im, true, +0.05f);
+                }
+                return;
+            case SDLK_MINUS:
+                if (video && !shift && !repeat && down) {
+                    // Decrease the white-transparency feathering bandwidth
+                    adjust_luminance(im, false, -0.02f);
+                }
+                return;
+            case SDLK_EQUALS:
+                if (video && !shift && !repeat && down) {
+                    // Increase the white-transparency feathering bandwidth
+                    adjust_luminance(im, false, +0.02f);
                 }
                 return;
             case SDLK_Q:

@@ -782,6 +782,10 @@ aoa_complete:
             .mipmaps = options->mipmaps,
             .fullscreen = options->fullscreen,
             .start_fps_counter = options->start_fps_counter,
+            .grayscale = options->grayscale,
+            .transparent_white = options->transparent_white,
+            .luminance_threshold = options->luminance_threshold,
+            .luminance_edge = options->luminance_edge,
         };
 
         if (!sc_screen_init(&s->screen, &screen_params)) {

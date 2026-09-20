@@ -232,6 +232,12 @@ Possible values are "disabled", "uhid" and "aoa":
 
 Also see \fB\-\-keyboard\fR and R\fB\-\-mouse\fR.
 .TP
+.B \-\-grayscale
+Render the video in grayscale.
+
+The luminance is computed using standard Rec.601 weights (0.299, 0.587, 0.114).
+
+.TP
 .B \-h, \-\-help
 Print this help.
 
@@ -619,6 +625,34 @@ Prefix the address with a '+' to force a reconnection.
 .TP
 .BI "\-\-time\-limit " seconds
 Set the maximum mirroring time, in seconds.
+
+.TP
+.B \-\-transparent\-white
+Make the white background of the mirrored display transparent depending on its luminance (luminance-to-alpha).
+
+Dark pixels (typically text) remain fully opaque, so that only the "black letters" are displayed, while the white background becomes see-through, revealing the surface behind the scrcpy window.
+
+The transition between opaque and transparent is smoothed over the luminance range [threshold - edge, threshold] using a smoothstep curve, so that anti-aliased text edges fade smoothly instead of producing hard white fringes.
+
+The window background (the letterbox bars) becomes transparent as well.
+
+This feature is not supported in fullscreen mode.
+
+.TP
+.BI "\-\-luminance\-threshold " value
+Set the luminance threshold for \fB\-\-transparent\-white\fR, in the range [0.0, 1.0].
+
+Pixels with a luminance above this value become fully transparent.
+
+Default is 0.85.
+
+.TP
+.BI "\-\-luminance\-edge " value
+Set the edge feathering bandwidth for \fB\-\-transparent\-white\fR, in the range [0.0, 0.5].
+
+The alpha transition between opaque and transparent is smoothed over the luminance range [threshold - edge, threshold].
+
+Default is 0.15.
 
 .TP
 .BI "\-\-tunnel\-host " ip

@@ -1,6 +1,7 @@
 #include "cli.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <getopt.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -111,6 +112,10 @@ enum {
     OPT_RENDER_FIT,
     OPT_IGNORE_VIDEO_ENCODER_CONSTRAINTS,
     OPT_NO_TERMINAL_TITLE,
+    OPT_GRAYSCALE,
+    OPT_TRANSPARENT_WHITE,
+    OPT_LUMINANCE_THRESHOLD,
+    OPT_LUMINANCE_EDGE,
 };
 
 struct sc_option {
@@ -1063,6 +1068,46 @@ static const struct sc_option options[] = {
         .longopt = "flex-display",
         .text = "Continuously resize the virtual display to match the window.",
     },
+    {
+        .longopt_id = OPT_GRAYSCALE,
+        .longopt = "grayscale",
+        .text = "Render the video in grayscale.\n"
+                "The luminance is computed using standard Rec.601 weights "
+                "(0.299, 0.587, 0.114).",
+    },
+    {
+        .longopt_id = OPT_TRANSPARENT_WHITE,
+        .longopt = "transparent-white",
+        .text = "Make the white background transparent depending on the "
+                "luminance.\n"
+                "Dark pixels (typically text) remain fully opaque: \"white at "
+                "the bottom is see-through, black letters remain \".\n"
+                "The window background becomes transparent as well, so the "
+                "surface behind the scrcpy window shows through.",
+    },
+    {
+        .longopt_id = OPT_LUMINANCE_THRESHOLD,
+        .longopt = "luminance-threshold",
+        .argdesc = "value",
+        .text = "Set the luminance threshold for --transparent-white, in the "
+                "range [0.0, 1.0].\n"
+                "Pixels with a luminance above this value become fully "
+                "transparent.\n"
+                "Default is 0.85.",
+    },
+    {
+        .longopt_id = OPT_LUMINANCE_EDGE,
+        .longopt = "luminance-edge",
+        .argdesc = "value",
+        .text = "Set the feathering bandwidth for --transparent-white, in the "
+                "range [0.0, 0.5].\n"
+                "The alpha transition between opaque and transparent is "
+                "smoothed over the luminance range [threshold - edge, "
+                "threshold] using a smoothstep curve, so that anti-aliased "
+                "text edges fade smoothly instead of producing hard white "
+                "fringes.\n"
+                "Default is 0.15.",
+    },
 };
 
 static const struct sc_shortcut shortcuts[] = {
@@ -1226,6 +1271,22 @@ static const struct sc_shortcut shortcuts[] = {
     {
         .shortcuts = { "MOD+Down" },
         .text = "Zoom camera out (camera mode only)",
+    },
+    {
+        .shortcuts = { "MOD+[" },
+        .text = "Decrease the white-transparency luminance threshold by 0.05",
+    },
+    {
+        .shortcuts = { "MOD+]" },
+        .text = "Increase the white-transparency luminance threshold by 0.05",
+    },
+    {
+        .shortcuts = { "MOD+-" },
+        .text = "Decrease the white-transparency feathering bandwidth by 0.02",
+    },
+    {
+        .shortcuts = { "MOD+=" },
+        .text = "Increase the white-transparency feathering bandwidth by 0.02",
     },
 };
 
@@ -2466,6 +2527,22 @@ parse_hex_color(const char *s, uint32_t *color) {
 }
 
 static bool
+parse_float_arg(const char *s, float min, float max, const char *name,
+                float *value) {
+    char *end;
+    errno = 0;
+    float v = strtof(s, &end);
+    if (errno || end == s || *end != '\0' || v < min || v > max) {
+        LOGE("Could not parse %s: %s (expected a value in [%g, %g])",
+             name, s, min, max);
+        return false;
+    }
+
+    *value = v;
+    return true;
+}
+
+static bool
 parse_render_fit(const char *optarg, enum sc_render_fit *mode) {
     if (!strcmp(optarg, "letterbox")) {
         *mode = SC_RENDER_FIT_LETTERBOX;
@@ -2944,6 +3021,25 @@ parse_args_with_getopt(struct scrcpy_cli_args *args, int argc, char *argv[],
                 break;
             case OPT_NO_TERMINAL_TITLE:
                 opts->update_terminal_title = false;
+                break;
+            case OPT_GRAYSCALE:
+                opts->grayscale = true;
+                break;
+            case OPT_TRANSPARENT_WHITE:
+                opts->transparent_white = true;
+                break;
+            case OPT_LUMINANCE_THRESHOLD:
+                if (!parse_float_arg(optarg, 0.0f, 1.0f,
+                                     "luminance threshold",
+                                     &opts->luminance_threshold)) {
+                    return false;
+                }
+                break;
+            case OPT_LUMINANCE_EDGE:
+                if (!parse_float_arg(optarg, 0.0f, 0.5f, "luminance edge",
+                                     &opts->luminance_edge)) {
+                    return false;
+                }
                 break;
             default:
                 // getopt prints the error message on stderr
@@ -3491,6 +3587,13 @@ parse_args_with_getopt(struct scrcpy_cli_args *args, int argc, char *argv[],
             LOGE("OTG mode: could not sink to V4L2 device");
             return false;
         }
+    }
+
+    if (!opts->transparent_white
+            && (opts->luminance_threshold != SC_LUMINANCE_THRESHOLD_DEFAULT
+                || opts->luminance_edge != SC_LUMINANCE_EDGE_DEFAULT)) {
+        LOGW("--luminance-threshold and --luminance-edge have no effect "
+             "without --transparent-white");
     }
 
     return true;
