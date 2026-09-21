@@ -48,6 +48,7 @@ _scrcpy() {
         --list-encoders
         --luminance-threshold=
         --luminance-edge=
+        --luminance-opacity=
         -m --max-size=
         -M
         --max-fps=
@@ -231,6 +232,7 @@ _scrcpy() {
         |--push-target \
         |--luminance-threshold \
         |--luminance-edge \
+        |--luminance-opacity \
         |--rotation \
         |--screen-off-timeout \
         |--tcpip \

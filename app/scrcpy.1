@@ -655,6 +655,14 @@ The alpha transition between opaque and transparent is smoothed over the luminan
 Default is 0.15.
 
 .TP
+.BI "\-\-luminance\-opacity " value
+Set the minimum opacity kept for \fB\-\-transparent\-white\fR, in the range [0.0, 1.0].
+
+The white background is removed up to this opacity instead of becoming completely transparent: a value of 0.2 caps the removal so that the whitest areas still remain 20% visible.
+
+Default is 0.0 (fully transparent).
+
+.TP
 .BI "\-\-tunnel\-host " ip
 Set the IP address of the adb tunnel to reach the scrcpy server. This option automatically enables \fB\-\-force\-adb\-forward\fR.
 
@@ -932,6 +940,30 @@ Zoom camera in (camera mode only)
 .TP
 .B MOD+Down
 Zoom camera out (camera mode only)
+
+.TP
+.B MOD+[
+Decrease the white-transparency luminance threshold by 0.05
+
+.TP
+.B MOD+]
+Increase the white-transparency luminance threshold by 0.05
+
+.TP
+.B MOD+-
+Decrease the white-transparency feathering bandwidth by 0.02
+
+.TP
+.B MOD+=
+Increase the white-transparency feathering bandwidth by 0.02
+
+.TP
+.B MOD+,
+Decrease the white-transparency minimum opacity by 0.02
+
+.TP
+.B MOD+.
+Increase the white-transparency minimum opacity by 0.02
 
 
 .SH Environment variables

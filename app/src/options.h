@@ -238,6 +238,7 @@ struct sc_port_range {
 
 #define SC_LUMINANCE_THRESHOLD_DEFAULT 0.85f
 #define SC_LUMINANCE_EDGE_DEFAULT 0.15f
+#define SC_LUMINANCE_OPACITY_DEFAULT 0.0f
 
 struct scrcpy_options {
     const char *serial;
@@ -353,6 +354,7 @@ struct scrcpy_options {
     bool transparent_white;
     float luminance_threshold;
     float luminance_edge;
+    float luminance_opacity;
 };
 
 extern const struct scrcpy_options scrcpy_options_default;

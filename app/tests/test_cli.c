@@ -134,6 +134,7 @@ static void test_options3(void) {
         "--transparent-white",
         "--luminance-threshold", "0.5",
         "--luminance-edge", "0.1",
+        "--luminance-opacity", "0.3",
     };
 
     bool ok = scrcpy_parse_args(&args, ARRAY_LEN(argv), argv);
@@ -144,6 +145,7 @@ static void test_options3(void) {
     assert(opts->transparent_white);
     assert(opts->luminance_threshold == 0.5f);
     assert(opts->luminance_edge == 0.1f);
+    assert(opts->luminance_opacity == 0.3f);
 
     // an out-of-range luminance threshold must be rejected
     args.opts = scrcpy_options_default;
@@ -163,6 +165,16 @@ static void test_options3(void) {
         "--luminance-edge", "-0.1",
     };
     ok = scrcpy_parse_args(&args, ARRAY_LEN(invalid_edge), invalid_edge);
+    assert(!ok);
+
+    // an out-of-range luminance opacity must be rejected
+    args.opts = scrcpy_options_default;
+    char *invalid_opacity[] = {
+        "scrcpy",
+        "--transparent-white",
+        "--luminance-opacity", "1.5",
+    };
+    ok = scrcpy_parse_args(&args, ARRAY_LEN(invalid_opacity), invalid_opacity);
     assert(!ok);
 }
 

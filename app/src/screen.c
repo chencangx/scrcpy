@@ -504,6 +504,7 @@ sc_screen_init(struct sc_screen *screen,
     screen->transparent_white = params->transparent_white;
     screen->luminance_threshold = params->luminance_threshold;
     screen->luminance_edge = params->luminance_edge;
+    screen->luminance_opacity = params->luminance_opacity;
 
     // A transparent window cannot be combined with exclusive fullscreen
     // (the flag is fixed at window creation), so disable transparency when
@@ -643,7 +644,7 @@ sc_screen_init(struct sc_screen *screen,
 
     ok = sc_texture_init(&screen->tex, screen->renderer, mipmaps,
                          filter_flags, params->luminance_threshold,
-                         params->luminance_edge);
+                         params->luminance_edge, params->luminance_opacity);
     if (!ok) {
         goto error_destroy_renderer;
     }
@@ -1145,28 +1146,40 @@ sc_screen_resize_to_pixel_perfect(struct sc_screen *screen) {
 
 bool
 sc_screen_get_luminance_params(struct sc_screen *screen, float *threshold,
-                               float *edge) {
-    return sc_texture_get_luminance_params(&screen->tex, threshold, edge);
+                               float *edge, float *opacity) {
+    return sc_texture_get_luminance_params(&screen->tex, threshold, edge,
+                                           opacity);
 }
 
 bool
-sc_screen_adjust_luminance(struct sc_screen *screen, bool threshold, float inc) {
+sc_screen_adjust_luminance(struct sc_screen *screen,
+                           enum sc_luminance_adjust action, float inc) {
     assert(screen->transparent_white);
     assert(screen->video);
 
     float new_threshold;
     float new_edge;
-    sc_texture_get_luminance_params(&screen->tex, &new_threshold, &new_edge);
+    float new_opacity;
+    sc_texture_get_luminance_params(&screen->tex, &new_threshold, &new_edge,
+                                    &new_opacity);
 
-    if (threshold) {
-        new_threshold += inc;
-        new_threshold = CLAMP(new_threshold, 0.f, 1.f);
-    } else {
-        new_edge += inc;
-        new_edge = CLAMP(new_edge, 0.f, 0.5f);
+    switch (action) {
+        case SC_LUMINANCE_ADJUST_THRESHOLD:
+            new_threshold = CLAMP(new_threshold + inc, 0.f, 1.f);
+            break;
+        case SC_LUMINANCE_ADJUST_EDGE:
+            new_edge = CLAMP(new_edge + inc, 0.f, 0.5f);
+            break;
+        case SC_LUMINANCE_ADJUST_OPACITY:
+            new_opacity = CLAMP(new_opacity + inc, 0.f, 1.f);
+            break;
+        default:
+            assert(!"unexpected luminance adjust action");
+            return false;
     }
 
-    sc_texture_set_luminance_params(&screen->tex, new_threshold, new_edge);
+    sc_texture_set_luminance_params(&screen->tex, new_threshold, new_edge,
+                                    new_opacity);
 
     // Apply the new parameters immediately on the cached frame
     if (screen->window_shown && screen->frame && screen->frame->width

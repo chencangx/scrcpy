@@ -45,6 +45,7 @@ struct sc_texture {
     // White (luminance) to transparent parameters
     float luminance_threshold;
     float luminance_edge;
+    float luminance_opacity; // minimum alpha kept in the transparent areas
 
     // Frames are converted to BGRA8888 by libswscale
     struct SwsContext *sws;
@@ -55,15 +56,15 @@ struct sc_texture {
 bool
 sc_texture_init(struct sc_texture *tex, SDL_Renderer *renderer, bool mipmaps,
                 uint8_t filter_flags, float luminance_threshold,
-                float luminance_edge);
+                float luminance_edge, float luminance_opacity);
 
 void
 sc_texture_set_luminance_params(struct sc_texture *tex, float threshold,
-                                float edge);
+                                float edge, float opacity);
 
 bool
 sc_texture_get_luminance_params(const struct sc_texture *tex, float *threshold,
-                                float *edge);
+                                float *edge, float *opacity);
 
 void
 sc_texture_destroy(struct sc_texture *tex);

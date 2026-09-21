@@ -44,6 +44,7 @@ struct sc_screen {
     bool transparent_white;
     float luminance_threshold;
     float luminance_edge;
+    float luminance_opacity;
 
     struct sc_controller *controller;
 
@@ -114,6 +115,12 @@ struct sc_screen {
     } resize_tracker;
 };
 
+enum sc_luminance_adjust {
+    SC_LUMINANCE_ADJUST_THRESHOLD,
+    SC_LUMINANCE_ADJUST_EDGE,
+    SC_LUMINANCE_ADJUST_OPACITY,
+};
+
 struct sc_screen_params {
     bool video;
     bool camera;
@@ -154,6 +161,7 @@ struct sc_screen_params {
     bool transparent_white;
     float luminance_threshold;
     float luminance_edge;
+    float luminance_opacity;
 };
 
 // initialize screen, create window, renderer and texture (window is hidden)
@@ -215,14 +223,16 @@ struct sc_point
 sc_screen_convert_window_to_frame_coords(struct sc_screen *screen,
                                         int32_t x, int32_t y);
 
-// Read the current luminance threshold and edge feathering parameters
+// Read the current luminance threshold, edge feathering and minimum opacity
+// parameters
 bool
 sc_screen_get_luminance_params(struct sc_screen *screen, float *threshold,
-                               float *edge);
+                               float *edge, float *opacity);
 
-// Increment (or decrement, with a negative inc) the luminance threshold
-// (threshold=true) or the edge feathering bandwidth (threshold=false)
+// Increment the luminance threshold (action=1), the edge feathering bandwidth
+// (action=2) or the minimum opacity (action=3)
 bool
-sc_screen_adjust_luminance(struct sc_screen *screen, bool threshold, float inc);
+sc_screen_adjust_luminance(struct sc_screen *screen, enum sc_luminance_adjust action,
+                           float inc);
 
 #endif

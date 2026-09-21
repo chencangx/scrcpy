@@ -116,6 +116,7 @@ enum {
     OPT_TRANSPARENT_WHITE,
     OPT_LUMINANCE_THRESHOLD,
     OPT_LUMINANCE_EDGE,
+    OPT_LUMINANCE_OPACITY,
 };
 
 struct sc_option {
@@ -1108,6 +1109,17 @@ static const struct sc_option options[] = {
                 "fringes.\n"
                 "Default is 0.15.",
     },
+    {
+        .longopt_id = OPT_LUMINANCE_OPACITY,
+        .longopt = "luminance-opacity",
+        .argdesc = "value",
+        .text = "Set the minimum opacity kept for --transparent-white, in the "
+                "range [0.0, 1.0].\n"
+                "The white background is removed up to this opacity instead "
+                "of becoming completely transparent: a value of 0.2 caps the "
+                "removal so that the whitest areas still remain 20% visible.\n"
+                "Default is 0.0 (fully transparent).",
+    },
 };
 
 static const struct sc_shortcut shortcuts[] = {
@@ -1287,6 +1299,14 @@ static const struct sc_shortcut shortcuts[] = {
     {
         .shortcuts = { "MOD+=" },
         .text = "Increase the white-transparency feathering bandwidth by 0.02",
+    },
+    {
+        .shortcuts = { "MOD+," },
+        .text = "Decrease the white-transparency minimum opacity by 0.02",
+    },
+    {
+        .shortcuts = { "MOD+." },
+        .text = "Increase the white-transparency minimum opacity by 0.02",
     },
 };
 
@@ -3041,6 +3061,12 @@ parse_args_with_getopt(struct scrcpy_cli_args *args, int argc, char *argv[],
                     return false;
                 }
                 break;
+            case OPT_LUMINANCE_OPACITY:
+                if (!parse_float_arg(optarg, 0.0f, 1.0f, "luminance opacity",
+                                     &opts->luminance_opacity)) {
+                    return false;
+                }
+                break;
             default:
                 // getopt prints the error message on stderr
                 return false;
@@ -3591,9 +3617,10 @@ parse_args_with_getopt(struct scrcpy_cli_args *args, int argc, char *argv[],
 
     if (!opts->transparent_white
             && (opts->luminance_threshold != SC_LUMINANCE_THRESHOLD_DEFAULT
-                || opts->luminance_edge != SC_LUMINANCE_EDGE_DEFAULT)) {
-        LOGW("--luminance-threshold and --luminance-edge have no effect "
-             "without --transparent-white");
+                || opts->luminance_edge != SC_LUMINANCE_EDGE_DEFAULT
+                || opts->luminance_opacity != SC_LUMINANCE_OPACITY_DEFAULT)) {
+        LOGW("--luminance-threshold, --luminance-edge and "
+             "--luminance-opacity have no effect without --transparent-white");
     }
 
     return true;

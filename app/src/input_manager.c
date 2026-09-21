@@ -351,24 +351,27 @@ apply_orientation_transform(struct sc_input_manager *im,
 
 /*
  * Adjust the white-to-transparent parameters from a shortcut.
- * "threshold" controls whether the luminance threshold (true) or the edge
- * feathering bandwidth (false) is adjusted.
+ * "action" selects whether the luminance threshold, the edge feathering
+ * bandwidth or the minimum opacity is adjusted.
  */
 static void
-adjust_luminance(struct sc_input_manager *im, bool threshold, float inc) {
+adjust_luminance(struct sc_input_manager *im, enum sc_luminance_adjust action,
+                 float inc) {
     struct sc_screen *screen = im->screen;
     if (!screen->transparent_white) {
         // Nothing to adjust when the effect is disabled
         return;
     }
 
-    sc_screen_adjust_luminance(screen, threshold, inc);
+    sc_screen_adjust_luminance(screen, action, inc);
 
     float new_threshold;
     float new_edge;
-    sc_screen_get_luminance_params(screen, &new_threshold, &new_edge);
-    LOGI("Luminance threshold=%.2f edge=%.2f (grayscale=%s, "
-         "transparent-white=%s)", new_threshold, new_edge,
+    float new_opacity;
+    sc_screen_get_luminance_params(screen, &new_threshold, &new_edge,
+                                   &new_opacity);
+    LOGI("Luminance threshold=%.2f edge=%.2f opacity=%.2f (grayscale=%s, "
+         "transparent-white=%s)", new_threshold, new_edge, new_opacity,
          screen->grayscale ? "true" : "false",
          screen->transparent_white ? "true" : "false");
 }
@@ -552,25 +555,39 @@ sc_input_manager_process_key(struct sc_input_manager *im,
             case SDLK_LEFTBRACKET:
                 if (video && !shift && !repeat && down) {
                     // Decrease the white-transparency luminance threshold
-                    adjust_luminance(im, true, -0.05f);
+                    adjust_luminance(im, SC_LUMINANCE_ADJUST_THRESHOLD,
+                                     -0.05f);
                 }
                 return;
             case SDLK_RIGHTBRACKET:
                 if (video && !shift && !repeat && down) {
                     // Increase the white-transparency luminance threshold
-                    adjust_luminance(im, true, +0.05f);
+                    adjust_luminance(im, SC_LUMINANCE_ADJUST_THRESHOLD,
+                                     +0.05f);
                 }
                 return;
             case SDLK_MINUS:
                 if (video && !shift && !repeat && down) {
                     // Decrease the white-transparency feathering bandwidth
-                    adjust_luminance(im, false, -0.02f);
+                    adjust_luminance(im, SC_LUMINANCE_ADJUST_EDGE, -0.02f);
                 }
                 return;
             case SDLK_EQUALS:
                 if (video && !shift && !repeat && down) {
                     // Increase the white-transparency feathering bandwidth
-                    adjust_luminance(im, false, +0.02f);
+                    adjust_luminance(im, SC_LUMINANCE_ADJUST_EDGE, +0.02f);
+                }
+                return;
+            case SDLK_COMMA:
+                if (video && !shift && !repeat && down) {
+                    // Decrease the white-transparency minimum opacity
+                    adjust_luminance(im, SC_LUMINANCE_ADJUST_OPACITY, -0.02f);
+                }
+                return;
+            case SDLK_PERIOD:
+                if (video && !shift && !repeat && down) {
+                    // Increase the white-transparency minimum opacity
+                    adjust_luminance(im, SC_LUMINANCE_ADJUST_OPACITY, +0.02f);
                 }
                 return;
             case SDLK_Q:

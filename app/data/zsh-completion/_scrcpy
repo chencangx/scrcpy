@@ -55,6 +55,7 @@ arguments=(
     '--list-encoders[List video and audio encoders available on the device]'
     '--luminance-threshold=[Luminance threshold for --transparent-white (0.0 to 1.0)]'
     '--luminance-edge=[Feathering bandwidth for --transparent-white (0.0 to 0.5)]'
+    '--luminance-opacity=[Minimum opacity kept for --transparent-white (0.0 to 1.0)]'
     {-m,--max-size=}'[Limit both the width and height of the video to value]'
     '-M[Use UHID/AOA mouse \(same as --mouse=uhid or --mouse=aoa, depending on OTG mode\)]'
     '--max-fps=[Limit the frame rate of screen capture]'

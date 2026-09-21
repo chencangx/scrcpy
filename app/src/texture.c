@@ -53,6 +53,7 @@ sc_texture_process_frame(struct sc_texture *tex) {
 
     float threshold = tex->luminance_threshold;
     float edge = tex->luminance_edge;
+    float opacity = tex->luminance_opacity;
     float low = threshold - edge;
 
     for (uint32_t y = 0; y < tex->texture_size.height; ++y) {
@@ -75,14 +76,16 @@ sc_texture_process_frame(struct sc_texture *tex) {
                 float gray = sc_texture_luminance(r, g, b);
                 float fade;
                 if (gray >= threshold) {
-                    fade = 1.f; // fully transparent
+                    fade = 1.f; // fully faded
                 } else if (gray <= low) {
                     fade = 0.f; // fully opaque
                 } else {
                     // Anti-aliased text edges fade smoothly here
                     fade = sc_texture_smoothstep((gray - low) / edge);
                 }
-                a *= 1.f - fade;
+                // Cap the removal so that the whitest areas keep at least the
+                // configured opacity (whites do not go below it)
+                a *= 1.f - fade * (1.f - opacity);
             }
 
             // Clamp in case of floating point rounding errors
@@ -110,23 +113,25 @@ sc_texture_process_frame(struct sc_texture *tex) {
 
 void
 sc_texture_set_luminance_params(struct sc_texture *tex, float threshold,
-                                float edge) {
+                                float edge, float opacity) {
     tex->luminance_threshold = threshold;
     tex->luminance_edge = edge;
+    tex->luminance_opacity = opacity;
 }
 
 bool
 sc_texture_get_luminance_params(const struct sc_texture *tex, float *threshold,
-                                float *edge) {
+                                float *edge, float *opacity) {
     *threshold = tex->luminance_threshold;
     *edge = tex->luminance_edge;
+    *opacity = tex->luminance_opacity;
     return true;
 }
 
 bool
 sc_texture_init(struct sc_texture *tex, SDL_Renderer *renderer, bool mipmaps,
                 uint8_t filter_flags, float luminance_threshold,
-                float luminance_edge) {
+                float luminance_edge, float luminance_opacity) {
     const char *renderer_name = SDL_GetRendererName(renderer);
     LOGI("Renderer: %s", renderer_name ? renderer_name : "(unknown)");
 
@@ -165,6 +170,7 @@ sc_texture_init(struct sc_texture *tex, SDL_Renderer *renderer, bool mipmaps,
     tex->premultiplied = false;
     tex->luminance_threshold = luminance_threshold;
     tex->luminance_edge = luminance_edge;
+    tex->luminance_opacity = luminance_opacity;
 
     tex->sws = NULL;
     tex->sws_buf = NULL;

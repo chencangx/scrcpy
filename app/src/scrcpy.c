@@ -786,6 +786,7 @@ aoa_complete:
             .transparent_white = options->transparent_white,
             .luminance_threshold = options->luminance_threshold,
             .luminance_edge = options->luminance_edge,
+            .luminance_opacity = options->luminance_opacity,
         };
 
         if (!sc_screen_init(&s->screen, &screen_params)) {
