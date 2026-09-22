@@ -65,12 +65,39 @@ get_file() {
     local url="$1"
     local file="$2"
     local sum="$3"
+    local url_list=""
     if [[ -f "$file" ]]
     then
         echo "$file: found"
+        # A found file still goes through verification below, if it matches
+        # the expected checksum it is reused
     else
         echo "$file: not found, downloading..."
-        wget "$url" -O "$file"
+        # Try the URLs in order (alternatives are separated by '|'),
+        # keeping the first successful download.
+        # shellcheck disable=SC2206
+        url_list=(${url//|/ })
+        if [[ ${#url_list[@]} -gt 1 ]]
+        then
+            for candidate in "${url_list[@]}"
+            do
+                echo "Trying: $candidate"
+                if wget "$candidate" -O "$file"
+                then
+                    break
+                fi
+                # Remove the partial or invalid download before retrying
+                rm -f "$file"
+            done
+        else
+            wget "$url" -O "$file"
+        fi
     fi
-    checksum "$file" "$sum"
+    if ! checksum "$file" "$sum"
+    then
+        # Do not leave an invalid file behind (for example an HTML error page
+        # returned instead of the archive); it would be reused on the next run
+        rm -f "$file"
+        return 1
+    fi
 }
