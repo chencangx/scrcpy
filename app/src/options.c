@@ -128,6 +128,8 @@ const struct scrcpy_options scrcpy_options_default = {
     .luminance_threshold = SC_LUMINANCE_THRESHOLD_DEFAULT,
     .luminance_edge = SC_LUMINANCE_EDGE_DEFAULT,
     .luminance_opacity = SC_LUMINANCE_OPACITY_DEFAULT,
+    .binary = false,
+    .binary_threshold = SC_BINARY_THRESHOLD_DEFAULT,
 };
 
 enum sc_orientation

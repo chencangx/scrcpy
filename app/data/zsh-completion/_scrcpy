@@ -19,6 +19,8 @@ arguments=(
     '--audio-source=[Select the audio source]:source:(output playback mic mic-unprocessed mic-camcorder mic-voice-recognition mic-voice-communication voice-call voice-call-uplink voice-call-downlink voice-performance)'
     '--audio-output-buffer=[Configure the size of the SDL audio output buffer (in milliseconds)]'
     {-b,--video-bit-rate=}'[Encode the video at the given bit-rate]'
+    '--binary[Render the video in black and white depending on the luminance]'
+    '--binary-threshold=[Threshold for --binary (0.0 to 1.0)]'
     '--background-color=[Set the background color]'
     '--camera-ar=[Select the camera size by its aspect ratio]'
     '--camera-high-speed=[Enable high-speed camera capture mode]'

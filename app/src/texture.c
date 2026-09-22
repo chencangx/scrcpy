@@ -72,6 +72,16 @@ sc_texture_process_frame(struct sc_texture *tex) {
                 b = gray;
             }
 
+            if (filter_flags & SC_TEXTURE_FILTER_BINARY) {
+                // Binary (black and white) rendering: hard threshold, so that
+                // dark pixels become pure black and bright pixels pure white
+                float gray = sc_texture_luminance(r, g, b);
+                float bw = gray >= tex->binary_threshold ? 1.f : 0.f;
+                r = bw;
+                g = bw;
+                b = bw;
+            }
+
             if (filter_flags & SC_TEXTURE_FILTER_TRANSPARENT_WHITE) {
                 float gray = sc_texture_luminance(r, g, b);
                 float fade;
@@ -128,10 +138,16 @@ sc_texture_get_luminance_params(const struct sc_texture *tex, float *threshold,
     return true;
 }
 
+void
+sc_texture_set_binary_threshold(struct sc_texture *tex, float threshold) {
+    tex->binary_threshold = threshold;
+}
+
 bool
 sc_texture_init(struct sc_texture *tex, SDL_Renderer *renderer, bool mipmaps,
                 uint8_t filter_flags, float luminance_threshold,
-                float luminance_edge, float luminance_opacity) {
+                float luminance_edge, float luminance_opacity,
+                float binary_threshold) {
     const char *renderer_name = SDL_GetRendererName(renderer);
     LOGI("Renderer: %s", renderer_name ? renderer_name : "(unknown)");
 
@@ -171,6 +187,7 @@ sc_texture_init(struct sc_texture *tex, SDL_Renderer *renderer, bool mipmaps,
     tex->luminance_threshold = luminance_threshold;
     tex->luminance_edge = luminance_edge;
     tex->luminance_opacity = luminance_opacity;
+    tex->binary_threshold = binary_threshold;
 
     tex->sws = NULL;
     tex->sws_buf = NULL;

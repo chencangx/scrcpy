@@ -663,6 +663,22 @@ The white background is removed up to this opacity instead of becoming completel
 Default is 0.0 (fully transparent).
 
 .TP
+.B \-\-binary
+Render the video in black and white (binary) depending on the luminance.
+
+Pixels below the binary threshold become black, pixels above become white. This gives crisp, high-contrast rendering, useful for reading text and documents.
+
+The threshold can be tuned with \fB\-\-binary\-threshold\fR, or at runtime with MOD+; and MOD+'.
+
+.TP
+.BI "\-\-binary\-threshold " value
+Set the threshold for \fB\-\-binary\fR, in the range [0.0, 1.0].
+
+Pixels with a luminance below this value are rendered black, and pixels above are rendered white.
+
+Default is 0.5.
+
+.TP
 .BI "\-\-tunnel\-host " ip
 Set the IP address of the adb tunnel to reach the scrcpy server. This option automatically enables \fB\-\-force\-adb\-forward\fR.
 
@@ -964,6 +980,14 @@ Decrease the white-transparency minimum opacity by 0.02
 .TP
 .B MOD+.
 Increase the white-transparency minimum opacity by 0.02
+
+.TP
+.B MOD+;
+Decrease the binary threshold by 0.05
+
+.TP
+.B MOD+'
+Increase the binary threshold by 0.05
 
 
 .SH Environment variables

@@ -42,9 +42,11 @@ struct sc_screen {
     bool window_transparent;
     bool grayscale;
     bool transparent_white;
+    bool binary;
     float luminance_threshold;
     float luminance_edge;
     float luminance_opacity;
+    float binary_threshold;
 
     struct sc_controller *controller;
 
@@ -119,6 +121,7 @@ enum sc_luminance_adjust {
     SC_LUMINANCE_ADJUST_THRESHOLD,
     SC_LUMINANCE_ADJUST_EDGE,
     SC_LUMINANCE_ADJUST_OPACITY,
+    SC_LUMINANCE_ADJUST_BINARY_THRESHOLD,
 };
 
 struct sc_screen_params {
@@ -162,6 +165,8 @@ struct sc_screen_params {
     float luminance_threshold;
     float luminance_edge;
     float luminance_opacity;
+    bool binary;
+    float binary_threshold;
 };
 
 // initialize screen, create window, renderer and texture (window is hidden)
@@ -234,5 +239,13 @@ sc_screen_get_luminance_params(struct sc_screen *screen, float *threshold,
 bool
 sc_screen_adjust_luminance(struct sc_screen *screen, enum sc_luminance_adjust action,
                            float inc);
+
+// Read the current binary threshold
+float
+sc_screen_get_binary_threshold(struct sc_screen *screen);
+
+// Increment the binary threshold (clamped to [0, 1])
+void
+sc_screen_adjust_binary_threshold(struct sc_screen *screen, float inc);
 
 #endif

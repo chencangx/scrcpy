@@ -505,6 +505,8 @@ sc_screen_init(struct sc_screen *screen,
     screen->luminance_threshold = params->luminance_threshold;
     screen->luminance_edge = params->luminance_edge;
     screen->luminance_opacity = params->luminance_opacity;
+    screen->binary = params->binary;
+    screen->binary_threshold = params->binary_threshold;
 
     // A transparent window cannot be combined with exclusive fullscreen
     // (the flag is fixed at window creation), so disable transparency when
@@ -641,10 +643,14 @@ sc_screen_init(struct sc_screen *screen,
     if (params->transparent_white) {
         filter_flags |= SC_TEXTURE_FILTER_TRANSPARENT_WHITE;
     }
+    if (params->binary) {
+        filter_flags |= SC_TEXTURE_FILTER_BINARY;
+    }
 
     ok = sc_texture_init(&screen->tex, screen->renderer, mipmaps,
                          filter_flags, params->luminance_threshold,
-                         params->luminance_edge, params->luminance_opacity);
+                         params->luminance_edge, params->luminance_opacity,
+                         params->binary_threshold);
     if (!ok) {
         goto error_destroy_renderer;
     }
@@ -1191,6 +1197,30 @@ sc_screen_adjust_luminance(struct sc_screen *screen,
     }
 
     return true;
+}
+
+float
+sc_screen_get_binary_threshold(struct sc_screen *screen) {
+    return screen->binary_threshold;
+}
+
+void
+sc_screen_adjust_binary_threshold(struct sc_screen *screen, float inc) {
+    assert(screen->binary);
+    assert(screen->video);
+
+    screen->binary_threshold =
+        CLAMP(screen->binary_threshold + inc, 0.f, 1.f);
+    sc_texture_set_binary_threshold(&screen->tex, screen->binary_threshold);
+
+    // Apply the new threshold immediately on the cached frame
+    if (screen->window_shown && screen->frame && screen->frame->width
+            && screen->frame->height) {
+        bool ok = sc_screen_apply_frame(screen, false);
+        if (!ok) {
+            LOGE("Frame update after binary threshold adjustment failed");
+        }
+    }
 }
 
 static void

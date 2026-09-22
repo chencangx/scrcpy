@@ -69,6 +69,8 @@ _<kbd>[Super]</kbd> is typically the <kbd>Windows</kbd> or <kbd>Cmd</kbd> key._
  | Increase the white-transparency feathering bandwidth (<kbd>--transparent-white</kbd> only) | <kbd>MOD</kbd>+<kbd>=</kbd>
  | Decrease the white-transparency minimum opacity (<kbd>--transparent-white</kbd> only) | <kbd>MOD</kbd>+<kbd>,</kbd>
  | Increase the white-transparency minimum opacity (<kbd>--transparent-white</kbd> only) | <kbd>MOD</kbd>+<kbd>.</kbd>
+ | Decrease the binary threshold (<kbd>--binary</kbd> only) | <kbd>MOD</kbd>+<kbd>;</kbd>
+ | Increase the binary threshold (<kbd>--binary</kbd> only) | <kbd>MOD</kbd>+<kbd>'</kbd>
 
 _¹Double-click on black borders to remove them._  
 _²Right-click turns the screen on if it was off, presses BACK otherwise._  

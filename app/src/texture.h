@@ -22,6 +22,7 @@ enum sc_texture_type {
 enum sc_texture_filter {
     SC_TEXTURE_FILTER_GRAYSCALE = 1 << 0,
     SC_TEXTURE_FILTER_TRANSPARENT_WHITE = 1 << 1,
+    SC_TEXTURE_FILTER_BINARY = 1 << 2,
 };
 
 struct sc_texture {
@@ -47,6 +48,9 @@ struct sc_texture {
     float luminance_edge;
     float luminance_opacity; // minimum alpha kept in the transparent areas
 
+    // Binary (black and white) rendering threshold
+    float binary_threshold;
+
     // Frames are converted to BGRA8888 by libswscale
     struct SwsContext *sws;
     // BGRA8888 buffer for the current frame
@@ -56,7 +60,8 @@ struct sc_texture {
 bool
 sc_texture_init(struct sc_texture *tex, SDL_Renderer *renderer, bool mipmaps,
                 uint8_t filter_flags, float luminance_threshold,
-                float luminance_edge, float luminance_opacity);
+                float luminance_edge, float luminance_opacity,
+                float binary_threshold);
 
 void
 sc_texture_set_luminance_params(struct sc_texture *tex, float threshold,
@@ -65,6 +70,9 @@ sc_texture_set_luminance_params(struct sc_texture *tex, float threshold,
 bool
 sc_texture_get_luminance_params(const struct sc_texture *tex, float *threshold,
                                 float *edge, float *opacity);
+
+void
+sc_texture_set_binary_threshold(struct sc_texture *tex, float threshold);
 
 void
 sc_texture_destroy(struct sc_texture *tex);

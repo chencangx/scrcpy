@@ -178,6 +178,38 @@ static void test_options3(void) {
     assert(!ok);
 }
 
+static void test_options4(void) {
+    struct scrcpy_cli_args args = {
+        .opts = scrcpy_options_default,
+        .help = false,
+        .version = false,
+    };
+
+    char *argv[] = {
+        "scrcpy",
+        "--binary",
+        "--binary-threshold", "0.4",
+    };
+
+    bool ok = scrcpy_parse_args(&args, ARRAY_LEN(argv), argv);
+    assert(ok);
+
+    const struct scrcpy_options *opts = &args.opts;
+    assert(opts->binary);
+    assert(opts->binary_threshold == 0.4f);
+
+    // an out-of-range binary threshold must be rejected
+    args.opts = scrcpy_options_default;
+    char *invalid_threshold[] = {
+        "scrcpy",
+        "--binary",
+        "--binary-threshold", "1.5",
+    };
+    ok = scrcpy_parse_args(&args, ARRAY_LEN(invalid_threshold),
+                           invalid_threshold);
+    assert(!ok);
+}
+
 static void test_parse_shortcut_mods(void) {
     uint8_t mods;
     bool ok;
@@ -215,6 +247,7 @@ int main(int argc, char *argv[]) {
     test_options();
     test_options2();
     test_options3();
+    test_options4();
     test_parse_shortcut_mods();
     return 0;
 }

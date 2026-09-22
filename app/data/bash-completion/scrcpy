@@ -12,6 +12,8 @@ _scrcpy() {
         --audio-source=
         --audio-output-buffer=
         -b --video-bit-rate=
+        --binary
+        --binary-threshold=
         --background-color=
         --camera-ar=
         --camera-id=
@@ -233,6 +235,7 @@ _scrcpy() {
         |--luminance-threshold \
         |--luminance-edge \
         |--luminance-opacity \
+        |--binary-threshold \
         |--rotation \
         |--screen-off-timeout \
         |--tcpip \

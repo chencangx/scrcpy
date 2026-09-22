@@ -376,6 +376,25 @@ adjust_luminance(struct sc_input_manager *im, enum sc_luminance_adjust action,
          screen->transparent_white ? "true" : "false");
 }
 
+/*
+ * Adjust the binary (black and white) threshold from a shortcut.
+ */
+static void
+adjust_binary_threshold(struct sc_input_manager *im, float inc) {
+    struct sc_screen *screen = im->screen;
+    if (!screen->binary) {
+        // Nothing to adjust when the effect is disabled
+        return;
+    }
+
+    sc_screen_adjust_binary_threshold(screen, inc);
+
+    LOGI("Binary threshold=%.2f (grayscale=%s, transparent-white=%s)",
+         sc_screen_get_binary_threshold(screen),
+         screen->grayscale ? "true" : "false",
+         screen->transparent_white ? "true" : "false");
+}
+
 static void
 sc_input_manager_process_text_input(struct sc_input_manager *im,
                                     const SDL_TextInputEvent *event) {
@@ -588,6 +607,18 @@ sc_input_manager_process_key(struct sc_input_manager *im,
                 if (video && !shift && !repeat && down) {
                     // Increase the white-transparency minimum opacity
                     adjust_luminance(im, SC_LUMINANCE_ADJUST_OPACITY, +0.02f);
+                }
+                return;
+            case SDLK_SEMICOLON:
+                if (video && !shift && !repeat && down) {
+                    // Decrease the binary threshold
+                    adjust_binary_threshold(im, -0.05f);
+                }
+                return;
+            case SDLK_APOSTROPHE:
+                if (video && !shift && !repeat && down) {
+                    // Increase the binary threshold
+                    adjust_binary_threshold(im, +0.05f);
                 }
                 return;
             case SDLK_Q:

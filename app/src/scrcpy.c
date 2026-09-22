@@ -787,6 +787,8 @@ aoa_complete:
             .luminance_threshold = options->luminance_threshold,
             .luminance_edge = options->luminance_edge,
             .luminance_opacity = options->luminance_opacity,
+            .binary = options->binary,
+            .binary_threshold = options->binary_threshold,
         };
 
         if (!sc_screen_init(&s->screen, &screen_params)) {

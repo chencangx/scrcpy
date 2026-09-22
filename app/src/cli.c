@@ -117,6 +117,8 @@ enum {
     OPT_LUMINANCE_THRESHOLD,
     OPT_LUMINANCE_EDGE,
     OPT_LUMINANCE_OPACITY,
+    OPT_BINARY,
+    OPT_BINARY_THRESHOLD,
 };
 
 struct sc_option {
@@ -1120,6 +1122,26 @@ static const struct sc_option options[] = {
                 "removal so that the whitest areas still remain 20% visible.\n"
                 "Default is 0.0 (fully transparent).",
     },
+    {
+        .longopt_id = OPT_BINARY,
+        .longopt = "binary",
+        .text = "Render the video in black and white (binary) depending on the "
+                "luminance.\n"
+                "Pixels below the binary threshold become black, pixels above "
+                "become white. This gives crisp, high-contrast rendering, "
+                "useful for reading text and documents.\n"
+                "The threshold can be tuned with --binary-threshold, or at "
+                "runtime with MOD+; and MOD+'.",
+    },
+    {
+        .longopt_id = OPT_BINARY_THRESHOLD,
+        .longopt = "binary-threshold",
+        .argdesc = "value",
+        .text = "Set the threshold for --binary, in the range [0.0, 1.0].\n"
+                "Pixels with a luminance below this value are rendered black, "
+                "and pixels above are rendered white.\n"
+                "Default is 0.5.",
+    },
 };
 
 static const struct sc_shortcut shortcuts[] = {
@@ -1307,6 +1329,14 @@ static const struct sc_shortcut shortcuts[] = {
     {
         .shortcuts = { "MOD+." },
         .text = "Increase the white-transparency minimum opacity by 0.02",
+    },
+    {
+        .shortcuts = { "MOD+;" },
+        .text = "Decrease the binary threshold by 0.05",
+    },
+    {
+        .shortcuts = { "MOD+'" },
+        .text = "Increase the binary threshold by 0.05",
     },
 };
 
@@ -3067,6 +3097,15 @@ parse_args_with_getopt(struct scrcpy_cli_args *args, int argc, char *argv[],
                     return false;
                 }
                 break;
+            case OPT_BINARY:
+                opts->binary = true;
+                break;
+            case OPT_BINARY_THRESHOLD:
+                if (!parse_float_arg(optarg, 0.0f, 1.0f, "binary threshold",
+                                     &opts->binary_threshold)) {
+                    return false;
+                }
+                break;
             default:
                 // getopt prints the error message on stderr
                 return false;
@@ -3621,6 +3660,11 @@ parse_args_with_getopt(struct scrcpy_cli_args *args, int argc, char *argv[],
                 || opts->luminance_opacity != SC_LUMINANCE_OPACITY_DEFAULT)) {
         LOGW("--luminance-threshold, --luminance-edge and "
              "--luminance-opacity have no effect without --transparent-white");
+    }
+
+    if (!opts->binary
+            && opts->binary_threshold != SC_BINARY_THRESHOLD_DEFAULT) {
+        LOGW("--binary-threshold has no effect without --binary");
     }
 
     return true;
