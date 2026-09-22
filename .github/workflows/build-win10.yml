@@ -1,0 +1,113 @@
+# Build a Windows 10 scrcpy zip (64-bit) on demand.
+#
+# This is a standalone variant of the `build-win64` and `package-win64` jobs
+# from release.yml: it cross-compiles the client (with the grayscale and
+# white-to-transparent features), builds the server, and packages everything
+# into a portable zip with adb.
+#
+# It only runs when triggered manually from the Actions tab
+# (workflow_dispatch).
+
+name: Build Windows 10 binary
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Version name used in the zip filename (default: git describe)'
+        required: false
+        default: ''
+
+env:
+  # $VERSION is used by release scripts; when empty, they fall back to
+  # "git describe --tags --always".
+  VERSION: ${{ github.event.inputs.name }}
+
+jobs:
+  build-scrcpy-server:
+    runs-on: ubuntu-latest
+    env:
+      GRADLE: gradle  # use native gradle instead of ./gradlew in scripts
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Build
+        run: release/build_server.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: scrcpy-server
+          path: release/work/build-server/server/scrcpy-server
+
+  build-win64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y meson ninja-build nasm \
+             mingw-w64 mingw-w64-tools libz-mingw-w64-dev
+
+      - name: Build
+        run: release/build_windows.sh 64
+
+      # upload-artifact does not preserve permissions
+      - name: Tar
+        run: |
+            cd release/work/build-win64
+            mkdir dist-tar
+            cd dist-tar
+            tar -C .. -cvf dist.tar.gz dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-win64-intermediate
+          path: release/work/build-win64/dist-tar/
+
+  package-win64:
+    needs:
+      - build-scrcpy-server
+      - build-win64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download scrcpy-server
+        uses: actions/download-artifact@v8
+        with:
+          name: scrcpy-server
+          path: release/work/build-server/server/
+
+      - name: Download build-win64
+        uses: actions/download-artifact@v8
+        with:
+          name: build-win64-intermediate
+          path: release/work/build-win64/dist-tar/
+
+      # upload-artifact does not preserve permissions
+      - name: Detar
+        run: |
+            cd release/work/build-win64
+            tar xf dist-tar/dist.tar.gz
+
+      - name: Package
+        run: release/package_client.sh win64 zip
+
+      - name: Upload Windows 10 build
+        uses: actions/upload-artifact@v7
+        with:
+          name: scrcpy-win10-win64
+          path: release/output/
